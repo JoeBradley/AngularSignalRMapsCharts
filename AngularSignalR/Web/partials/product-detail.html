@@ -1,0 +1,48 @@
+<div class="row" ng-controller="ProductCtrl">
+    <form name="ProductForm" novalidate="novalidate" class="form-horizontal">
+        <div class="col-md-12">
+            <div class="row">
+                <div class="col-md-12">
+                    <button type="button" class="close btn btn-info" ng-click="close()">&times;</button>
+                    <h2 class="modal-title">Add Product</h2>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <p class="validateTips">All form fields are required.</p>
+                        <div role="form" class="form-horizontal">
+                            <div class="form-group">
+                                <label for="Name" class="col-lg-3 control-label">Name</label>
+                                <div class="col-xs-6">
+                                    <input type="text" class="form-control" placeholder="Product Name" ng-model="product.Name" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="Price" class="col-lg-3 control-label">Price</label>
+                                <div class="col-xs-6 input-group">
+                                    <span class="input-group-addon">$</span>
+                                    <input type="text" class="form-control" placeholder="Product Price" ng-model="product.Price" required />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="ImageUrl" class="col-lg-3 control-label">Image Url</label>
+                                <div class="col-xs-6">
+                                    <input type="text" class="form-control" placeholder="Image Url eg. /web/images/products/apples.jpg" ng-model="product.ImageUrl" />
+                                    <p class="help-block">Leave empty to get relevant image from Flickr</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="validation-error bs-callout bs-callout-danger" style="display: none;"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="pull-right">
+                            <button type="button" class="btn btn-danger close-form" ng-click="cancel()" ng-disabled="isCancelDisabled()"><span class="glyphicon glyphicon-remove-sign"></span> Close</button>
+                            <button type="button" class="btn btn-success" ng-click="save()" ng-disabled="isSaveDisabled()"><span class="glyphicon glyphicon-ok-sign"></span> Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

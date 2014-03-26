@@ -16,16 +16,24 @@ appControllers.controller('JobListCtrl', ['$scope', '$timeout', 'jobService', 'l
         $scope.mapMarkers = null;
         $scope.mapOptions = null;
         $scope.geocoder = null;
-        $scope.chart = null;
-        $scope.chartOptions = null;
+
         $scope.chartData = null;
+        $scope.timelineChart = null;
+        $scope.timelineChartOptions = null;
+        $scope.columnChart = null;
+        $scope.columnChartWrapper = null;
+        $scope.columnChartOptions = null;
+        $scope.columnChartCntrl = null;
+
         $scope.ignoreChartClick = false;
 
         $scope.jobsCount = 0;
 
+        // TODO: make private functions, i.e.: var loadJob = function(job){...} 
+
         this.loadJob = function (job) {
             that.mapJob(job);
-            that.chartJob(job);
+            that.loadJobChartData(job);
         };
         this.mapJob = function (job) {
             console.log('map job');
@@ -50,21 +58,35 @@ appControllers.controller('JobListCtrl', ['$scope', '$timeout', 'jobService', 'l
             });
 
         };
-        this.loadChart = function () {
+        this.loadCharts = function () {
+            that.loadChartData();
+            //that.loadTimelineChart();
+            that.loadColumnChart();
+        }
+        this.loadChartData = function () {
+            // init Chart Data, called after first list of jobs received
+            //$scope.chartData.clear();
+
+            $scope.chartData = new google.visualization.DataTable();
+            $scope.chartData.addColumn('datetime', 'Date');
+            $scope.chartData.addColumn('number', 'Customer Satisfaction');
+            $scope.chartData.addColumn('number', 'Corporate Responsibility');
+            $scope.chartData.addColumn('number', 'Enivormental Standards');
+            $scope.chartData.addColumn('number', 'Employee Satisfaction');
+            $scope.chartData.addColumn('string', 'Name');
+            $scope.chartData.addColumn('string', 'Url');
+
+            $.each($scope.jobs, function (index) {
+                that.loadJobChartData(this, false);
+            });
+        }
+        this.loadTimelineChart = function () {
             console.log("load chart");
             try {
-                $scope.chartData = new google.visualization.DataTable();
-                $scope.chartData.addColumn('date', 'Date');
-                $scope.chartData.addColumn('number', 'Customer Satisfaction');
-                $scope.chartData.addColumn('number', 'Corporate Responsibility');
-                $scope.chartData.addColumn('number', 'Enivormental Standards');
-                $scope.chartData.addColumn('number', 'Employee Satisfaction');
-                $scope.chartData.addColumn('string', 'title1');
-                $scope.chartData.addColumn('string', 'text1');
+                
+                $scope.timelineChart = new google.visualization.AnnotatedTimeLine(document.getElementById('Chart'));
 
-                $scope.chart = new google.visualization.AnnotatedTimeLine(document.getElementById('Chart'));
-
-                $scope.chartOptions = {
+                $scope.timelineChartOptions = {
                     allowRedraw: true,
                     colors: ['#0098fc', '#b6ff00', '#ffd800', '#ff6a00'],
                     displayAnnotations: true,
@@ -74,27 +96,23 @@ appControllers.controller('JobListCtrl', ['$scope', '$timeout', 'jobService', 'l
                     timeline: {}
                 };
 
-                $.each($scope.jobs, function (index) {
-                    that.chartJob(this, false);
-                });
-
-                $scope.chart.draw($scope.chartData, $scope.chartOptions);
+                $scope.timelineChart.draw($scope.chartData, $scope.timelineChartOptions);
 
                 // Add Chart event handlers
                 //google.visualization.events.addListener($scope.chart, 'rangechange', function(event) {
                 //    console.log('range changed: ' + event.start + ' to ' + event.end);
                 //});
-                google.visualization.events.addListener($scope.chart, 'select', function () {
+                google.visualization.events.addListener($scope.timelineChart, 'select', function () {
                     console.log('marker selected');
-                    var markers = $scope.chart.getSelection();
+                    var markers = $scope.timelineChart.getSelection();
                     if (markers != undefined && markers != null) {
                         var index = markers[0].row;
                         $scope.selectJob(null, index, 'chart');
                     }
                 });
-                google.visualization.events.addListener($scope.chart, 'ready', function () {
+                google.visualization.events.addListener($scope.timelineChart, 'ready', function () {
                     console.log('chart ready');
-                    $('.chartclient-annotation').on('click', function () {
+                    $('#Chart .chartclient-annotation').on('click', function () {
                         // select the item in the list
                         if (!$scope.ignoreChartClick) {
                             var index = $(this).index();
@@ -106,18 +124,116 @@ appControllers.controller('JobListCtrl', ['$scope', '$timeout', 'jobService', 'l
             }
             catch (ex) { console.error(ex.message); }
         };
-        this.chartJob = function (job, refresh) {
+        this.loadColumnChart = function () {
+            console.log("load column chart");
+            try {
+                $scope.columnChart = new google.visualization.Dashboard(document.getElementById('ColumnChartDashboard'));
+                $scope.columnChartCntrl = new google.visualization.ControlWrapper({
+                    'controlType': 'ChartRangeFilter',
+                    'containerId': 'ColumnChartCntrl',
+                    'options': {
+                        // Filter by the date axis.
+                        'filterColumnIndex': 0,
+                        'ui': {
+                            'chartType': 'LineChart',
+                            'chartOptions': {
+                                'chartArea': { 'width': '90%' },
+                                'hAxis': { 'baselineColor': 'none' }
+                            },
+                            // Display a single series that shows the closing value of the stock.
+                            // Thus, this view has two columns: the date (axis) and the stock value (line series).
+                            'chartView': {
+                                'columns': [0,
+                                    {
+                                        'calc': function (dataTable, rowIndex) {
+                                            var sum = dataTable.getValue(rowIndex, 1) + dataTable.getValue(rowIndex, 2) + dataTable.getValue(rowIndex, 3) + dataTable.getValue(rowIndex, 4);
+                                            return sum / 4;
+                                        },
+                                        'type': 'number'
+                                    }
+                                ]
+                            },
+                            // 1 day in milliseconds = 24 * 60 * 60 * 1000 = 86,400,000 ;  36000000  = 1 hour
+                            'minRangeSize': 5000
+                        }
+                    },
+                    // Initial range: 2012-02-09 to 2012-03-20.
+                    'state': { 'range': { 'start': new Date(2000, 1, 1), 'end': new Date(2020, 1, 1) } }
+                });
+
+                
+                $scope.columnChartWrapper = new google.visualization.ChartWrapper({
+                    'chartType': 'ColumnChart',
+                    'containerId': 'ColumnChart',
+                    'options': {
+                        // Use the same chart area width as the control for axis alignment.
+                        'isStacked': true,
+                        'chartArea': { 'height': '80%', 'width': '90%' },
+                        'hAxis': { 'slantedText': false },
+                        'vAxis': { 'viewWindow': { 'min': 0 } },
+                        'legend': { 'position': 'none' }
+                    },
+                    // Convert the first column from 'date' to 'string'.
+                    'view': {
+                        'columns': [
+                          //{
+                          //    'calc': function (dataTable, rowIndex) {
+                          //        return dataTable.getFormattedValue(rowIndex, 0);
+                          //    },
+                          //    'type': 'string'
+                          //},
+                          0, 1, 2, 3, 4
+                        ]
+                    }
+                });
+                
+                $scope.columnChart.bind($scope.columnChartCntrl, $scope.columnChartWrapper);
+                $scope.columnChart.draw($scope.chartData);
+
+                // Add Chart event handlers
+                google.visualization.events.addListener($scope.columnChart, 'ready', function(event) {
+                    console.log('Column Chart ready');
+                });
+                //google.visualization.events.addListener($scope.chart, 'select', function () {
+                //    console.log('marker selected');
+                //    var markers = $scope.timelineChart.getSelection();
+                //    if (markers != undefined && markers != null) {
+                //        var index = markers[0].row;
+                //        $scope.selectJob(null, index, 'chart');
+                //    }
+                //});
+                //google.visualization.events.addListener($scope.chart, 'ready', function () {
+                //    console.log('chart ready');
+                //    $('.chartclient-annotation').on('click', function () {
+                //        // select the item in the list
+                //        if (!$scope.ignoreChartClick) {
+                //            var index = $(this).index();
+                //            $scope.selectJob($scope.jobs[index], index, 'chart');
+                //        }
+                //    });
+
+                //});
+            }
+            catch (ex) { console.error(ex.message); }
+        };
+
+        this.loadJobChartData = function (job, refresh) {
             //console.log('chart job');
             if (refresh == undefined || refresh == null) refresh = true;
 
             $scope.chartData.addRows([[new Date(job.DateCompletedTicks), job.SEO, job.Web, job.Directories, job.Social, job.Name, job.Url]]);
 
-            if (refresh)
-                $scope.chart.draw($scope.chartData, $scope.chartOptions);
+            if (refresh) that.refreshCharts();
+               
+        };
+        this.refreshCharts = function() {
+            //$scope.timelineChart.draw($scope.chartData, $scope.timelineChartOptions);
+            $scope.columnChart.draw($scope.chartData);
         };
         this.setChartRange = function (start, end) {
-            $scope.chart.setVisibleChartRange(start, end)
+            $scope.timelineChart.setVisibleChartRange(start, end)
         };
+
         function initializeMap() {
             //Idea for marker clustering> http://google-maps-utility-library-v3.googlecode.com/svn/trunk/markerclusterer/
             $scope.geocoder = new google.maps.Geocoder();
@@ -133,7 +249,7 @@ appControllers.controller('JobListCtrl', ['$scope', '$timeout', 'jobService', 'l
             try {
                 console.log("init chart");
                 // When chart library is loaded, craete the chart and load in jobs.
-                $timeout(function () { google.load('visualization', '1', { 'callback': that.loadChart, 'packages': ['annotatedtimeline'] }) }, 10, false);
+                $timeout(function () { google.load('visualization', '1', { 'callback': that.loadCharts, 'packages': ['annotatedtimeline', 'corechart', 'controls'] }) }, 10, false);
             }
             catch (ex) { console.error(ex.message); }
         };

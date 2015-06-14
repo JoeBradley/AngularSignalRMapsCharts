@@ -56,6 +56,20 @@ appServices.factory('hubService', ['$rootScope',
                     $rootScope.$emit('addJob', job);
                 });
 
+                self.proxy.on('addLog', function (json) {
+                    //console.log('hubService.on.addLog:' + json);
+
+                    var log = JSON.parse(json);
+                    $rootScope.$emit('addLog', log);
+                });
+
+                self.proxy.on('addLogs', function (json) {
+                    console.log('hubService.on.addLog:' + json);
+
+                    var logs = JSON.parse(json);
+                    $rootScope.$emit('addLogs', logs);
+                });
+
                 self.proxy.on('ping', function (datetime) {
                     console.log('hubService.on.ping:' + datetime);
                     $rootScope.$emit('ping', datetime);
@@ -72,6 +86,7 @@ appServices.factory('hubService', ['$rootScope',
         var ping = function () {
             self.proxy.invoke('ping');
         };
+
         var getRandomJobs = function () {
             console.log('hubService.getRandomJobs');
             try {

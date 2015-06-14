@@ -353,3 +353,11 @@ appControllers.controller('JobListCtrl', ['$scope', '$timeout', 'jobService', 'l
         });
 
     }]);
+
+appControllers.controller('LogCtrl', ['$scope', '$timeout', 'logService', 'hubService',
+    function ($scope, $timeout, logService, hubService) {
+
+        var that = this;
+
+    }]);
+

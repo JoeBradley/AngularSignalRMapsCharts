@@ -14,6 +14,7 @@ namespace AngularSignalRMapsCharts
         protected void Application_Start(object sender, EventArgs e)
         {
             RouteConfig.RegisterRoutes(RouteTable.Routes);
+            LogDependency.RegisterDependency();
         }
 
         protected void Session_Start(object sender, EventArgs e)
@@ -43,6 +44,7 @@ namespace AngularSignalRMapsCharts
 
         protected void Application_End(object sender, EventArgs e)
         {
+            LogDependency.Stop();
 
         }
     }

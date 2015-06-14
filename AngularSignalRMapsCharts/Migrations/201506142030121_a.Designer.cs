@@ -5,13 +5,13 @@ namespace AngularSignalRMapsCharts.Migrations
     using System.Data.Entity.Migrations.Infrastructure;
     using System.Resources;
     
-    public sealed partial class Initial : IMigrationMetadata
+    public sealed partial class a : IMigrationMetadata
     {
-        private readonly ResourceManager Resources = new ResourceManager(typeof(Initial));
+        private readonly ResourceManager Resources = new ResourceManager(typeof(a));
         
         string IMigrationMetadata.Id
         {
-            get { return "201312161116553_Initial"; }
+            get { return "201506142030121_a"; }
         }
         
         string IMigrationMetadata.Source

@@ -11,7 +11,7 @@ namespace AngularSignalRMapsCharts.DAL
     public class DataContext : DbContext
     {
         public DbSet<Company> Companies { get; set; }
-        public DbSet<EventHistory> Events { get; set; }
+        public DbSet<EventLog> Events { get; set; }
         
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {

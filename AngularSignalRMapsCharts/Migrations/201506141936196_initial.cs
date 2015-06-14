@@ -3,7 +3,7 @@ namespace AngularSignalRMapsCharts.Migrations
     using System;
     using System.Data.Entity.Migrations;
     
-    public partial class Initial : DbMigration
+    public partial class initial : DbMigration
     {
         public override void Up()
         {
@@ -12,12 +12,11 @@ namespace AngularSignalRMapsCharts.Migrations
                 c => new
                     {
                         Id = c.Int(nullable: false, identity: true),
-                        Name = c.String(unicode: false),
-                        Url = c.String(unicode: false),
-                        Address = c.String(unicode: false),
+                        Name = c.String(),
+                        Url = c.String(),
+                        Address = c.String(),
                         PostCode = c.Int(nullable: false),
                         DateCompleted = c.DateTime(nullable: false),
-                        DateCompletedTicks = c.Double(nullable: false),
                         SEO = c.Double(nullable: false),
                         Web = c.Double(nullable: false),
                         Directories = c.Double(nullable: false),
@@ -26,12 +25,12 @@ namespace AngularSignalRMapsCharts.Migrations
                 .PrimaryKey(t => t.Id);
             
             CreateTable(
-                "dbo.EventHistory",
+                "dbo.EventLog",
                 c => new
                     {
                         Id = c.Int(nullable: false, identity: true),
-                        Title = c.String(unicode: false),
-                        Data = c.String(unicode: false),
+                        Title = c.String(),
+                        Details = c.String(),
                     })
                 .PrimaryKey(t => t.Id);
             
@@ -39,7 +38,7 @@ namespace AngularSignalRMapsCharts.Migrations
         
         public override void Down()
         {
-            DropTable("dbo.EventHistory");
+            DropTable("dbo.EventLog");
             DropTable("dbo.Company");
         }
     }

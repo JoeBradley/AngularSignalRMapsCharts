@@ -10,7 +10,7 @@ namespace AngularSignalRMapsCharts.DAL
     {
         private DataContext context = new DataContext();
         private EntityRepository<Company> companyRepository;
-        private EntityRepository<EventHistory> eventsRepository;
+        private EntityRepository<EventLog> eventsRepository;
 
         public EntityRepository<Company> CompanyRepository
         {
@@ -23,13 +23,13 @@ namespace AngularSignalRMapsCharts.DAL
                 return companyRepository;
             }
         }
-        public EntityRepository<EventHistory> EventsRepository
+        public EntityRepository<EventLog> EventsRepository
         {
             get
             {
                 if (this.eventsRepository == null)
                 {
-                    this.eventsRepository = new EntityRepository<EventHistory>(context);
+                    this.eventsRepository = new EntityRepository<EventLog>(context);
                 }
                 return eventsRepository;
             }

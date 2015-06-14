@@ -76,8 +76,11 @@ namespace AngularSignalRMapsCharts.ServiceHub
 
         public void BroadcastLog()
         {
-            var logs = GetList(sinceDate);
-            Clients.All.addLogs(logs);
+            var data = GetList(sinceDate).ToList();
+            //var data = _db.CompanyRepository.Get().ToList();
+            
+            Clients.All.addLogs(data);
+            
             sinceDate = DateTime.UtcNow;
         }
 

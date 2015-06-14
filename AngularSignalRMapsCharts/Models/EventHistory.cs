@@ -17,5 +17,7 @@ namespace AngularSignalRMapsCharts.Models
         public virtual string Details { get; set; }
         [DataMember]
         public virtual DateTime DateCreated { get; set; }
+
+        public EventLog() { }
     }
 }

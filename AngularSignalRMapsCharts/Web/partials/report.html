@@ -11,8 +11,8 @@
     </div>
     <br />
     <div class="row">
-        <div class="col-md-6">
-            <div id="Map" class="map-canvas"></div>
+        <div id="List" class="col-md-6" style="max-height: 360px; overflow-y: auto;">
+            <ng-include src='"/web/partials/log.html"' />
         </div>
         <div id="List" class="col-md-6" style="max-height: 360px; overflow-y: auto;">
             <div class="row list-item" ng-repeat="job in jobs | orderBy:orderProp track by job.Id">
@@ -27,24 +27,24 @@
                 <div class="col-md-6 list-scores">
                     <div class="score-container">
                         <div class="score-label">{{job.SEO}}%</div>
-                        <div class="score-result-container"title="Customer Satisfaction" style="width: {{job.SEO}}%; opacity: {{job.SEO / 100}};">
+                        <div class="score-result-container" title="Customer Satisfaction" style="width: {{job.SEO}}%; opacity: {{job.SEO / 100}};">
                             <div class="score-result seo"></div>
                         </div>
                     </div>
                     <div class="score-container">
                         <div class="score-label">{{job.Web}}%</div>
-                        <div class="score-result-container"  title="Corporate Responsibility" style="width: {{job.Web}}%; opacity: {{job.Web / 100}};">
+                        <div class="score-result-container" title="Corporate Responsibility" style="width: {{job.Web}}%; opacity: {{job.Web / 100}};">
                             <div class="score-result web"></div>
                         </div>
                     </div>
-                     <div class="score-container">
-                        <div class="score-label" >{{job.Directories}}%</div>
+                    <div class="score-container">
+                        <div class="score-label">{{job.Directories}}%</div>
                         <div class="score-result-container" title="Enivormental Standards" style="width: {{job.Directories}}%; opacity: {{job.Directories / 100}};">
                             <div class="score-result directories"></div>
                         </div>
                     </div>
                     <div class="score-container">
-                        <div class="score-label" >{{job.Social}}%</div>
+                        <div class="score-label">{{job.Social}}%</div>
                         <div class="score-result-container" title="Employee Satisfaction" style="width: {{job.Social}}%; opacity: {{job.Social / 100}};">
                             <div class="score-result social"></div>
                         </div>
@@ -53,21 +53,30 @@
             </div>
         </div>
     </div>
-    <br />
-    <div class="row">
-        <div class="col-md-12" style="position: relative;">
-            <div id="ColumnChartDashboard">
-                <div id="ColumnChart" style="width: 960px; height: 320px;"></div>
-                <div id="ColumnChartCntrl" style="width: 960px; height: 50px;"></div>
+
+        <br />
+        <div class="row">
+            <div class="col-md-12" style="position: relative;">
+                <div id="ColumnChartDashboard">
+                    <div id="ColumnChart" style="width: 960px; height: 320px;"></div>
+                    <div id="ColumnChartCntrl" style="width: 960px; height: 50px;"></div>
+                </div>
+
             </div>
-            
+        </div>
+        <br />
+        <div class="row">
+            <div class="col-md-12" style="position: relative;">
+                <div id="Chart" style="width: 960px; height: 320px;"></div>
+            </div>
+        </div>
+    <br />
+
+        <div class="row">
+            <div class="col-md-12" style="position: relative;">
+                <div id="Map" class="map-canvas"></div>
+            </div>
         </div>
     </div>
-    <br />    
-    <div class="row">
-        <div class="col-md-12" style="position: relative;">
-            <div id="Chart" style="width: 960px; height: 320px;"></div>
-        </div>
-    </div>
-    
-</div>
+
+

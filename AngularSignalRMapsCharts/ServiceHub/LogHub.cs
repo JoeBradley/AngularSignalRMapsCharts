@@ -74,10 +74,10 @@ namespace AngularSignalRMapsCharts.ServiceHub
             return _db.EventsRepository.Get(x => x.DateCreated >= date);
         }
 
+        // Test with query: INSERT INTO EventLog (Title, Details, DateCreated) VALUES ('test', 'test', '2016-01-01 00:00:00.000');
         public void BroadcastLog()
         {
-            var data = GetList(sinceDate).ToList();
-            //var data = _db.CompanyRepository.Get().ToList();
+            var data = Newtonsoft.Json.JsonConvert.SerializeObject(GetList(sinceDate));
             
             Clients.All.addLogs(data);
             

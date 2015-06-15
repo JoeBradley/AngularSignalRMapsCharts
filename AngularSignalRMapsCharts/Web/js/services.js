@@ -35,7 +35,7 @@ appServices.factory('hubService', ['$rootScope',
     function ($rootScope) {
         var proxy = null;
         var self = this;
-
+        var waitTimeout = 1;
         var initialize = function () {
 
             console.log('init hubService');
@@ -44,8 +44,23 @@ appServices.factory('hubService', ['$rootScope',
             // need to wrap this in .done( function() , but trouble with reference to this, see for help:
             // http://javascript.crockford.com/private.html
             self.proxy = $.connection.appHub;
+            self.logProxy = $.connection.logHub;
 
-            $.connection.hub.start().done(function () { });
+            $.connection.hub.start()
+                .done(function () {
+                    console.log('hub connection established.');
+                })
+                .fail(function (error) {
+                    console.log('hub connection failed. Error: ' + error);
+                });
+
+            $.connection.hub.disconnected(function () {
+                console.log('connection.hub.disconnected');
+                window.setTimeout(function () {
+                    self.waitTimeout++;
+                    self.initialize();
+                },waitTimeout * 1000);
+            });
 
             try {
                 // Calls FROM server
@@ -55,26 +70,26 @@ appServices.factory('hubService', ['$rootScope',
                     var job = JSON.parse(json);
                     $rootScope.$emit('addJob', job);
                 });
-
-                self.proxy.on('addLog', function (json) {
-                    //console.log('hubService.on.addLog:' + json);
-
-                    var log = JSON.parse(json);
-                    $rootScope.$emit('addLog', log);
-                });
-
-                self.proxy.on('addLogs', function (json) {
-                    console.log('hubService.on.addLog:' + json);
-
-                    var logs = JSON.parse(json);
-                    $rootScope.$emit('addLogs', logs);
-                });
-
                 self.proxy.on('ping', function (datetime) {
                     console.log('hubService.on.ping:' + datetime);
                     $rootScope.$emit('ping', datetime);
                 });
 
+                // LogHub
+                self.logProxy.on('addLog', function (json) {
+                    console.log('hubService.on.addLog:' + json);
+
+                    var log = JSON.parse(json);
+                    $rootScope.$emit('addLog', log);
+                });
+                self.logProxy.on('addLogs', function (json) {
+                    //console.log('hubService.on.addLogs:' + json);
+
+                    var logs = JSON.parse(json);
+                    $rootScope.$broadcast('addLogs', logs);
+                });
+
+                
             }
             catch (e) { console.error(e.message); }
 

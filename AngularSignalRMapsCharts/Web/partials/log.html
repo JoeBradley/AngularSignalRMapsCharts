@@ -1,3 +1,9 @@
 ﻿<div ng-controller="LogCntrl">
-
+    <div class="row list-item" ng-repeat="item in logs | orderBy:'DateCreated':true track by item.Id">
+        <div class="col-md-12">
+            <h4>{{item.Title}}</h4>
+            <div>{{item.Details}}</div>
+            <div>{{item.DateCreated}}</div>
+        </div>
+    </div>
 </div>

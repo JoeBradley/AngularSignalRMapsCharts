@@ -50,7 +50,7 @@ appControllers.controller('JobListCtrl', ['$scope', '$timeout', 'jobService', 'l
                     });
                     google.maps.event.addListener(job.marker, 'click', function () {
                         $scope.map.setCenter(job.marker.getPosition());
-                        $scope.selectJob(job,null,'map');
+                        $scope.selectJob(job, null, 'map');
                     });
                 } else {
                     //console.error("Geocode was not successful for the following reason: " + status);
@@ -83,7 +83,7 @@ appControllers.controller('JobListCtrl', ['$scope', '$timeout', 'jobService', 'l
         this.loadTimelineChart = function () {
             console.log("load chart");
             try {
-                
+
                 $scope.timelineChart = new google.visualization.AnnotatedTimeLine(document.getElementById('Chart'));
 
                 $scope.timelineChartOptions = {
@@ -161,7 +161,7 @@ appControllers.controller('JobListCtrl', ['$scope', '$timeout', 'jobService', 'l
                     'state': { 'range': { 'start': new Date(2000, 1, 1), 'end': new Date(2020, 1, 1) } }
                 });
 
-                
+
                 $scope.columnChartWrapper = new google.visualization.ChartWrapper({
                     'chartType': 'ColumnChart',
                     'containerId': 'ColumnChart',
@@ -186,12 +186,12 @@ appControllers.controller('JobListCtrl', ['$scope', '$timeout', 'jobService', 'l
                         ]
                     }
                 });
-                
+
                 $scope.columnChart.bind($scope.columnChartCntrl, $scope.columnChartWrapper);
                 $scope.columnChart.draw($scope.chartData);
 
                 // Add Chart event handlers
-                google.visualization.events.addListener($scope.columnChart, 'ready', function(event) {
+                google.visualization.events.addListener($scope.columnChart, 'ready', function (event) {
                     console.log('Column Chart ready');
                 });
                 //google.visualization.events.addListener($scope.chart, 'select', function () {
@@ -224,9 +224,9 @@ appControllers.controller('JobListCtrl', ['$scope', '$timeout', 'jobService', 'l
             $scope.chartData.addRows([[new Date(job.DateCompletedTicks), job.SEO, job.Web, job.Directories, job.Social, job.Name, job.Url]]);
 
             if (refresh) that.refreshCharts();
-               
+
         };
-        this.refreshCharts = function() {
+        this.refreshCharts = function () {
             //$scope.timelineChart.draw($scope.chartData, $scope.timelineChartOptions);
             $scope.columnChart.draw($scope.chartData);
         };
@@ -354,10 +354,49 @@ appControllers.controller('JobListCtrl', ['$scope', '$timeout', 'jobService', 'l
 
     }]);
 
-appControllers.controller('LogCtrl', ['$scope', '$timeout', 'logService', 'hubService',
-    function ($scope, $timeout, logService, hubService) {
+appControllers.controller('LogCntrl', ['$scope', '$rootScope', 'logService', 'hubService',
+    function ($scope, $rootScope, logService, hubService) {
 
         var that = this;
+        var pipeSize = 5;
+        $scope.logs = [];
 
+        // Hub bound events
+        $rootScope.$on('addLogs', function (e, logs) {
+            $scope.addLogs(logs);
+        });
+
+        $rootScope.$on('addLog', function (e, log) {
+            $scope.addLog(log,true);
+        });
+
+        $scope.addLogs = function (logs) {
+            console.log("LogCntrl.addLogs");
+            $scope.$apply(function () {
+                $.each(logs, function (index) {
+                    $scope.addLog(this, false);                    
+                });
+                $scope.trimPipe();
+            });
+        };
+
+        $scope.addLog = function (log, trim) {
+            var found = false;
+            $.each($scope.logs, function (index) {
+                if (this.Id == log.Id) found = true;
+            });
+            if (!found) {
+                $scope.logs.push(this);
+            }
+
+            if (trim) $scope.trimPipe();
+            
+        };
+
+        $scope.trimPipe = function () {
+            if ($scope.logs.length > pipeSize) {
+                $scope.logs.splice(0, $scope.logs.length - pipeSize);
+            }
+        };
     }]);
 

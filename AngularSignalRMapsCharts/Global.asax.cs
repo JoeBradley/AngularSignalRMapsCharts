@@ -19,7 +19,7 @@ namespace AngularSignalRMapsCharts
 
         protected void Session_Start(object sender, EventArgs e)
         {
-
+            LogDependency.RegisterDependency();
         }
 
         protected void Application_BeginRequest(object sender, EventArgs e)

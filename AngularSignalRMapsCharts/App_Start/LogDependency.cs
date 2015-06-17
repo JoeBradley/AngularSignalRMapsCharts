@@ -55,27 +55,11 @@ namespace AngularSignalRMapsCharts
 
         private static void sqlDependency_OnChange(object sender, SqlNotificationEventArgs e)
         {
-
             if (e.Info == SqlNotificationInfo.Insert)
             {
-                Log.Instance.BroadcastLog();
-                ////This is how signalrHub can be accessed outside the SignalR Hub Notification.cs file 
-                //var context = GlobalHost.ConnectionManager.GetHubContext<NotificationHub>();
-
-                //NotificationRepository objRepos = new NotificationRepository();
-
-                //List<NotificationList> objList = objRepos.GetLatestNotifications(LastRun);
-
-                //LastRun = DateTime.Now.ToUniversalTime();
-
-
-                //foreach (var item in objList)
-                //{
-                //    //replace domain name with your own domain name 
-                //    context.Clients.User("<DomainName>" + item.UserID).addLatestNotification(item);
-                //}
-
+                Log.Instance.BroadcastLogs();
             }
+         
             //Call the RegisterNotification method again
             RegisterDependency();
         }

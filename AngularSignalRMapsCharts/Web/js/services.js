@@ -38,31 +38,15 @@ appServices.factory('hubService', ['$rootScope',
         var waitTimeout = 1;
         var initialize = function () {
 
-            console.log('init hubService');
-
-            // Declare a proxy to reference the hub. Defined in StoreHub.cs
-            // need to wrap this in .done( function() , but trouble with reference to this, see for help:
-            // http://javascript.crockford.com/private.html
-            self.proxy = $.connection.appHub;
-            self.logProxy = $.connection.logHub;
-
-            $.connection.hub.start()
-                .done(function () {
-                    console.log('hub connection established.');
-                })
-                .fail(function (error) {
-                    console.log('hub connection failed. Error: ' + error);
-                });
-
-            $.connection.hub.disconnected(function () {
-                console.log('connection.hub.disconnected');
-                window.setTimeout(function () {
-                    self.waitTimeout++;
-                    self.initialize();
-                },waitTimeout * 1000);
-            });
-
             try {
+                console.log('init hubService');
+
+                // Declare a proxy to reference the hub. Defined in StoreHub.cs
+                // need to wrap this in .done( function() , but trouble with reference to this, see for help:
+                // http://javascript.crockford.com/private.html
+                self.proxy = $.connection.appHub;
+                self.logProxy = $.connection.logHub;
+
                 // Calls FROM server
                 self.proxy.on('addJob', function (json) {
                     //console.log('hubService.on.addJob:' + json);
@@ -76,30 +60,43 @@ appServices.factory('hubService', ['$rootScope',
                 });
 
                 // LogHub
-                self.logProxy.on('addLog', function (json) {
-                    console.log('hubService.on.addLog:' + json);
-
-                    var log = JSON.parse(json);
+                self.logProxy.on('addLog', function (log) {
+                    console.log('hubService.on.addLog:' + JSON.stringify(log, null, '\t'));
                     $rootScope.$emit('addLog', log);
                 });
-                self.logProxy.on('addLogs', function (json) {
-                    //console.log('hubService.on.addLogs:' + json);
-
-                    var logs = JSON.parse(json);
+                self.logProxy.on('addLogs', function (logs) {
+                    //console.log('hubService.on.addLogs:' + JSON.stringify(logs,null, '\t'));
                     $rootScope.$broadcast('addLogs', logs);
-                });
 
-                
+                });
             }
             catch (e) { console.error(e.message); }
 
-            console.log('hubService finished loading');
+            $.connection.hub.disconnected(function () {
+                console.log('connection.hub.disconnected');
+                window.setTimeout(function () {
+                    self.waitTimeout++;
+                    initialize();
+                }, waitTimeout * 1000);
+            });
 
+            $.connection.hub.logging = true;
+            $.connection.hub.start()
+                .done(function () {
+                    console.log('hub connection established.');
+                })
+                .fail(function (error) {
+                    console.log('hub connection failed. Error: ' + error);
+                });
         };
 
         // Calls TO server        
         var ping = function () {
             self.proxy.invoke('ping');
+        };
+
+        var raiseException = function () {
+            self.logProxy.invoke('raiseException');
         };
 
         var getRandomJobs = function () {
@@ -113,7 +110,8 @@ appServices.factory('hubService', ['$rootScope',
         return {
             initialize: initialize,
             ping: ping,
-            getRandomJobs: getRandomJobs
+            getRandomJobs: getRandomJobs,
+            raiseException: raiseException,
         };
     }
 ]);

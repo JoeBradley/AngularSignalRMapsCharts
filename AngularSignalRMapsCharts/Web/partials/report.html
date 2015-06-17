@@ -3,6 +3,7 @@
         <div class="col-md-12" style="overflow: hidden;">
             <div class="pull-left">
                 <a class="btn btn-info" ng-click="getRandomJobs()"><span class="glyphicon glyphicon-cloud-download"></span>&nbsp;&nbsp;Get More Random Companies</a>
+                <a class="btn btn-danger" ng-click="raiseException()"><span class="glyphicon glyphicon-cloud-download"></span>&nbsp;&nbsp;Raise Server Exception</a>
             </div>
             <div class="pull-right large-text">
                 <strong>{{jobsCount}} companies</strong>
@@ -12,7 +13,7 @@
     <br />
     <div class="row">
         <div id="List" class="col-md-6" style="max-height: 360px; overflow-y: auto;">
-            <ng-include src='"/web/partials/log.html"' />
+            <ng-include src="'/web/partials/log.html'" />
         </div>
         <div id="List" class="col-md-6" style="max-height: 360px; overflow-y: auto;">
             <div class="row list-item" ng-repeat="job in jobs | orderBy:orderProp track by job.Id">

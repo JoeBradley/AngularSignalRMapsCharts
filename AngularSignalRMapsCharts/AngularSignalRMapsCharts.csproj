@@ -41,6 +41,9 @@
     <Reference Include="EntityFramework">
       <HintPath>..\packages\EntityFramework.5.0.0\lib\net45\EntityFramework.dll</HintPath>
     </Reference>
+    <Reference Include="log4net">
+      <HintPath>..\packages\log4net.2.0.3\lib\net40-full\log4net.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.AspNet.SignalR.Core, Version=2.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.AspNet.SignalR.Core.2.2.0\lib\net45\Microsoft.AspNet.SignalR.Core.dll</HintPath>
@@ -465,6 +468,7 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="LiveLogAppender.cs" />
     <Compile Include="Migrations\201506141936196_initial.cs" />
     <Compile Include="Migrations\201506141936196_initial.Designer.cs">
       <DependentUpon>201506141936196_initial.cs</DependentUpon>
@@ -472,6 +476,14 @@
     <Compile Include="Migrations\201506142030121_a.cs" />
     <Compile Include="Migrations\201506142030121_a.Designer.cs">
       <DependentUpon>201506142030121_a.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201506162126565_b.cs" />
+    <Compile Include="Migrations\201506162126565_b.Designer.cs">
+      <DependentUpon>201506162126565_b.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201506162128232_b1.cs" />
+    <Compile Include="Migrations\201506162128232_b1.Designer.cs">
+      <DependentUpon>201506162128232_b1.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\Company.cs" />
@@ -503,6 +515,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201506142030121_a.resx">
       <DependentUpon>201506142030121_a.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201506162126565_b.resx">
+      <DependentUpon>201506162126565_b.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201506162128232_b1.resx">
+      <DependentUpon>201506162128232_b1.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

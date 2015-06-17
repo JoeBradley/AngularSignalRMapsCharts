@@ -13,13 +13,14 @@ namespace AngularSignalRMapsCharts
 
         protected void Application_Start(object sender, EventArgs e)
         {
+            log4net.Config.XmlConfigurator.Configure();
+
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             LogDependency.RegisterDependency();
         }
 
         protected void Session_Start(object sender, EventArgs e)
         {
-            LogDependency.RegisterDependency();
         }
 
         protected void Application_BeginRequest(object sender, EventArgs e)

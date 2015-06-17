@@ -34,13 +34,23 @@ namespace AngularSignalRMapsCharts.ServiceHub
         {
             return _log.GetList(date);
         }
+
+        public void RaiseException()
+        {
+            try {
+                throw new Exception("Client raised exception", new Exception("client raised exception"));
+            }
+            catch (Exception ex) {
+                Log.Instance.BroadcastLog(new EventLog(ex));
+            }
+        }
     }
 
     public class Log : IDisposable
     {
         // Singleton instance
         private readonly static Lazy<Log> _instance = new Lazy<Log>(() => new Log(GlobalHost.ConnectionManager.GetHubContext<LogHub>().Clients));
-
+        
         private static DateTime sinceDate = DateTime.MinValue;
 
         UnitOfWork _db = new UnitOfWork(); 
@@ -48,7 +58,6 @@ namespace AngularSignalRMapsCharts.ServiceHub
         private Log(IHubConnectionContext<dynamic> clients)
         {
             Clients = clients;
-
         }
 
         public static Log Instance
@@ -75,13 +84,18 @@ namespace AngularSignalRMapsCharts.ServiceHub
         }
 
         // Test with query: INSERT INTO EventLog (Title, Details, DateCreated) VALUES ('test', 'test', '2016-01-01 00:00:00.000');
-        public void BroadcastLog()
+        public void BroadcastLogs()
         {
-            var data = Newtonsoft.Json.JsonConvert.SerializeObject(GetList(sinceDate));
+            var logs = GetList(sinceDate);
             
-            Clients.All.addLogs(data);
+            Clients.All.addLogs(logs);
             
             sinceDate = DateTime.UtcNow;
+        }
+
+        public void BroadcastLog(EventLog log)
+        {
+            Clients.All.addLog(log);
         }
 
 

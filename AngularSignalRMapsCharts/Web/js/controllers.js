@@ -12,11 +12,6 @@ appControllers.controller('JobListCtrl', ['$scope', '$timeout', 'jobService', 'l
 
         $scope.orderProp = '-Id';
 
-        $scope.map = null;
-        $scope.mapMarkers = null;
-        $scope.mapOptions = null;
-        $scope.geocoder = null;
-
         $scope.chartData = null;
         $scope.timelineChart = null;
         $scope.timelineChartOptions = null;
@@ -32,31 +27,7 @@ appControllers.controller('JobListCtrl', ['$scope', '$timeout', 'jobService', 'l
         // TODO: make private functions, i.e.: var loadJob = function(job){...} 
 
         this.loadJob = function (job) {
-            that.mapJob(job);
             that.loadJobChartData(job);
-        };
-        this.mapJob = function (job) {
-            console.log('map job');
-            var Address = "Australia " + job.PostCode.toString();
-            if (Address == '' || Address == null) return;
-
-            $scope.geocoder.geocode({ 'address': Address }, function (results, status) {
-                if (status == google.maps.GeocoderStatus.OK) {
-                    $scope.map.setCenter(results[0].geometry.location);
-                    job.marker = new google.maps.Marker({
-                        map: $scope.map,
-                        title: job.Name,
-                        position: results[0].geometry.location
-                    });
-                    google.maps.event.addListener(job.marker, 'click', function () {
-                        $scope.map.setCenter(job.marker.getPosition());
-                        $scope.selectJob(job, null, 'map');
-                    });
-                } else {
-                    //console.error("Geocode was not successful for the following reason: " + status);
-                }
-            });
-
         };
         this.loadCharts = function () {
             that.loadChartData();
@@ -234,15 +205,6 @@ appControllers.controller('JobListCtrl', ['$scope', '$timeout', 'jobService', 'l
             $scope.timelineChart.setVisibleChartRange(start, end)
         };
 
-        function initializeMap() {
-            //Idea for marker clustering> http://google-maps-utility-library-v3.googlecode.com/svn/trunk/markerclusterer/
-            $scope.geocoder = new google.maps.Geocoder();
-            $scope.mapOptions = {
-                center: new google.maps.LatLng(-34.397, 150.644),
-                zoom: 8
-            };
-            $scope.map = new google.maps.Map(document.getElementById("Map"), $scope.mapOptions);
-        };
         function initializeChart() {
             // see: https://developers.google.com/chart/interactive/docs/gallery/annotatedtimeline?hl=de
             // chart libraries: http://stackoverflow.com/questions/1890434/javascript-library-for-drawing-graphs-over-timelines-zoomable-and-selectable
@@ -254,14 +216,9 @@ appControllers.controller('JobListCtrl', ['$scope', '$timeout', 'jobService', 'l
             catch (ex) { console.error(ex.message); }
         };
 
-        initializeMap();
-
-        // Get jobs from web service, load list, add map markers, setup chart 
+        // Get jobs from web service, load list, setup chart 
         $scope.jobs = jobService.list(function (jobs) {
-            $scope.jobsCount = jobs.length;
-            $.each(jobs, function (index) {
-                that.mapJob(this);
-            });
+            $scope.jobsCount = jobs.length;            
             initializeChart();
         });
 
@@ -297,28 +254,11 @@ appControllers.controller('JobListCtrl', ['$scope', '$timeout', 'jobService', 'l
 
             //clear selection
             $('#List .selected').removeClass('selected');
-            $.each($scope.jobs, function () {
-                if (this.marker != null && this.marker != undefined) {
-                    this.marker.setIcon('http://maps.google.com/mapfiles/ms/icons/red-dot.png');
-                    this.marker.setAnimation(google.maps.Animation.NONE);
-                }
-            });
-
+            
             //set selection, Scroll to the center
             var $p = $('#List');
             var $c = $('#List > div:eq(' + index + ')').addClass('selected');
             $p.scrollTop($p.scrollTop() + $c.position().top - $p.height() / 2 + $c.height() / 2);
-
-            if (job.marker != null && job.marker != undefined) {
-                $scope.map.panTo(job.marker.getPosition());
-                job.marker.setIcon('http://maps.google.com/mapfiles/ms/icons/blue-dot.png')
-                job.marker.setAnimation(google.maps.Animation.BOUNCE);
-                $timeout(function (job) {
-                    $.each($scope.jobs, function () {
-                        this.marker.setAnimation(google.maps.Animation.NONE);
-                    });
-                }, 3000, false);
-            }
 
             if (ignoreCaller != 'chart') {
                 $scope.ignoreChartClick = true;
@@ -342,6 +282,11 @@ appControllers.controller('JobListCtrl', ['$scope', '$timeout', 'jobService', 'l
             hubService.getRandomJobs();
         };
 
+        $scope.raiseException = function () {
+            console.log('Raise server exception');
+            hubService.raiseException();
+        };
+
         // Hub bound events
         $scope.$parent.$on('addJob', function (e, job) {
             console.log('JobListCtrl.on.addJob');
@@ -363,40 +308,59 @@ appControllers.controller('LogCntrl', ['$scope', '$rootScope', 'logService', 'hu
 
         // Hub bound events
         $rootScope.$on('addLogs', function (e, logs) {
+            console.log("LogCntrl.addLogs");
             $scope.addLogs(logs);
         });
 
         $rootScope.$on('addLog', function (e, log) {
-            $scope.addLog(log,true);
+            console.log("LogCntrl.addLog");
+            $scope.addLog(log, true);
         });
 
         $scope.addLogs = function (logs) {
-            console.log("LogCntrl.addLogs");
-            $scope.$apply(function () {
-                $.each(logs, function (index) {
-                    $scope.addLog(this, false);                    
+            //console.log("LogCntrl.addLogs: " + JSON.stringify(logs,null, '\t'));
+            try {
+                $scope.$apply(function () {
+                    $.each(logs, function (index) {
+                        $scope.addLog(this, false);
+                    });
+                    $scope.trimPipe();
                 });
-                $scope.trimPipe();
-            });
+            }
+            catch (ex) {
+                console.error(ex.message);
+            }
         };
 
         $scope.addLog = function (log, trim) {
+            //console.log("log: " + JSON.stringify(log, null, '\t'));
             var found = false;
-            $.each($scope.logs, function (index) {
-                if (this.Id == log.Id) found = true;
-            });
-            if (!found) {
-                $scope.logs.push(this);
-            }
+            try {
+                $.each($scope.logs, function (index) {
+                    if (this.Id == log.Id) found = true;
+                });
+                if (!found) {
+                    $scope.logs.push(log);
+                }
 
-            if (trim) $scope.trimPipe();
-            
+                if (trim) { $scope.$apply(function () { $scope.trimPipe(); }); }
+            }
+            catch (ex) {
+                console.error(ex.message);
+            }
         };
 
         $scope.trimPipe = function () {
-            if ($scope.logs.length > pipeSize) {
-                $scope.logs.splice(0, $scope.logs.length - pipeSize);
+            try {                
+                if ($scope.logs.length > pipeSize) {
+                    $scope.logs.splice(0, $scope.logs.length - pipeSize);
+                }
+                //console.log("LogCntrl.trimPipe: " + JSON.stringify($scope.logs, null, '\t'));                    
             }
+            catch (ex) {
+                console.error(ex.message);
+            }
+
         };
     }]);
 

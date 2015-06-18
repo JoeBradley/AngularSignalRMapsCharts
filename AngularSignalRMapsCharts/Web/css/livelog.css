@@ -1,0 +1,5 @@
+﻿.accordion-container h3 { cursor: pointer; margin: 0; padding: 3px 0; border-top: 1px solid rgba(255,255,255,0.5); font-size: 14px; font-family: Arial, sans-serif;  }
+.accordion-container h3:last-child { border-bottom: 1px solid rgba(255,255,255,0.5); }
+.accordion-container h3.expanded:last-child { border-bottom: none; }
+.accordion-container .acc-body { display: none; }
+.accordion-container .acc-body.expanded:last-child { border-bottom: 1px solid rgba(255,255,255,0.5); }

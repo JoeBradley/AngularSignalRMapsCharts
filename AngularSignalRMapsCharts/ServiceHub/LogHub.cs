@@ -12,18 +12,21 @@ using System.Threading;
 
 using AngularSignalRMapsCharts.DAL;
 using AngularSignalRMapsCharts.Models;
+using log4net;
 
 namespace AngularSignalRMapsCharts.ServiceHub
 {
     public class LogHub : Hub
     {
+        private static readonly ILog logger = LogManager.GetLogger(typeof(LogHub).Name);
+
         private readonly Log _log;
 
         public LogHub() : this(Log.Instance) { }
 
         public LogHub(Log log)
         {
-            _log = log;
+            _log = log;            
         }
 
         public IEnumerable<EventLog> GetLogs()
@@ -41,7 +44,8 @@ namespace AngularSignalRMapsCharts.ServiceHub
                 throw new Exception("Client raised exception", new Exception("client raised exception"));
             }
             catch (Exception ex) {
-                Log.Instance.BroadcastLog(new EventLog(ex));
+                logger.Error(ex);
+                //Log.Instance.BroadcastLog(new EventLog(ex));
             }
         }
     }

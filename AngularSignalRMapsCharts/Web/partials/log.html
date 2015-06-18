@@ -1,9 +1,11 @@
 ﻿<div ng-controller="LogCntrl">
-    <div class="row list-item" ng-repeat="log in logs | orderBy:'DateCreated':true track by log.Id">
-        <div class="col-md-12">
-            <h4>{{log.Id}} - {{log.Title}}</h4>
-            <div>{{log.Details}}</div>
-            <div>{{log.DateCreated}}</div>
+    <div class="row">
+        <div class="col-md-12 accordion-container">
+            <h3 class="acc-header" ng-repeat-start="log in logs | orderBy:'DateCreated':true track by log.Id" data-id="{{log.Id}}">{{log.Title}}</h3>
+            <div ng-repeat-end class="acc-body">
+                <div class="log-details">{{log.Details}}</div>
+                <div class="log-timeago" data-created="{{log.Created}}" data-date-created="{{log.DateCreated}}" data-ticks="{{log.UnixTicks}}">{{log.Created.timeAgo()}}</div>
+            </div>
         </div>
     </div>
 </div>

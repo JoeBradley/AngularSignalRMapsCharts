@@ -12,6 +12,7 @@
 
     <title>AngularJS | SignalR | Google  Charts</title>
 
+    <link href="/web/css/livelog.css" rel="stylesheet" />
     <link rel="stylesheet" href="~/web/css/bootstrap-theme.css">
     <link rel="stylesheet" href="~/web/css/bootstrap.css">
     <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
@@ -27,7 +28,7 @@
 
     <%--<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA52a2B7GBrLB45Bkt-Z-7IW66toW6y6Mg&sensor=false"></script>--%>
     <script type='text/javascript' src='http://www.google.com/jsapi'></script>
-
+    <script src="Web/js/livelog.utils.js"></script>
     <script src="web/js/lib/angular/angular.js"></script>
     <script src="web/js/lib/angular/angular-animate.js"></script>
     <script src="web/js/lib/angular/angular-resource.js"></script>

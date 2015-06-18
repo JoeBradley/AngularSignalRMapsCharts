@@ -5,6 +5,30 @@
 
 var appControllers = angular.module('appControllers', []);
 
+// todo: look into decorators to finish this, add method to hubService to send logs back to server.
+appControllers.config(['$provide', function ($provide) {
+    $provide.decorator('$log', ['$delegate',  '$injector', 
+        function ($delegate, $injector) {
+            // Keep track of the original debug method, we'll need it later.
+            var origDebug = $delegate.debug;
+            
+            $delegate.debug = function () {
+                var args = [].slice.call(arguments);
+                args[0] = [new Date().toString(), ': ', args[0]].join('');
+
+                // Send on our enhanced message to the original debug method.
+                origDebug.apply(null, args)
+                    
+                // call hubService, send logs to server.
+                var hubService = $injector.get('hubService');
+                //hubService.raiseException();
+            };
+
+            return $delegate;
+        }]);
+    }]);
+
+
 appControllers.controller('JobListCtrl', ['$scope', '$timeout', 'jobService', 'logService', 'hubService',
     function ($scope, $timeout, jobService, logService, hubService) {
 
@@ -218,7 +242,7 @@ appControllers.controller('JobListCtrl', ['$scope', '$timeout', 'jobService', 'l
 
         // Get jobs from web service, load list, setup chart 
         $scope.jobs = jobService.list(function (jobs) {
-            $scope.jobsCount = jobs.length;            
+            $scope.jobsCount = jobs.length;
             initializeChart();
         });
 
@@ -254,7 +278,7 @@ appControllers.controller('JobListCtrl', ['$scope', '$timeout', 'jobService', 'l
 
             //clear selection
             $('#List .selected').removeClass('selected');
-            
+
             //set selection, Scroll to the center
             var $p = $('#List');
             var $c = $('#List > div:eq(' + index + ')').addClass('selected');
@@ -299,8 +323,8 @@ appControllers.controller('JobListCtrl', ['$scope', '$timeout', 'jobService', 'l
 
     }]);
 
-appControllers.controller('LogCntrl', ['$scope', '$rootScope', 'logService', 'hubService',
-    function ($scope, $rootScope, logService, hubService) {
+appControllers.controller('LogCntrl', ['$scope', '$rootScope', '$interval', '$log',
+    function ($scope, $rootScope, $interval, $log) {
 
         var that = this;
         var pipeSize = 5;
@@ -309,22 +333,27 @@ appControllers.controller('LogCntrl', ['$scope', '$rootScope', 'logService', 'hu
         // Hub bound events
         $rootScope.$on('addLogs', function (e, logs) {
             console.log("LogCntrl.addLogs");
-            $scope.addLogs(logs);
+            $scope.$apply(function () {
+                $scope.addLogs(logs);
+                $scope.trimPipe();
+                $scope.updateTimeago();
+            });
         });
 
         $rootScope.$on('addLog', function (e, log) {
             console.log("LogCntrl.addLog");
-            $scope.addLog(log, true);
+            
+            $scope.$apply(function () {
+                $scope.addLog(log);
+                $scope.trimPipe();
+            });
         });
 
         $scope.addLogs = function (logs) {
             //console.log("LogCntrl.addLogs: " + JSON.stringify(logs,null, '\t'));
             try {
-                $scope.$apply(function () {
-                    $.each(logs, function (index) {
-                        $scope.addLog(this, false);
-                    });
-                    $scope.trimPipe();
+                $.each(logs, function (index) {
+                    $scope.addLog(this, false);
                 });
             }
             catch (ex) {
@@ -332,7 +361,7 @@ appControllers.controller('LogCntrl', ['$scope', '$rootScope', 'logService', 'hu
             }
         };
 
-        $scope.addLog = function (log, trim) {
+        $scope.addLog = function (log) {
             //console.log("log: " + JSON.stringify(log, null, '\t'));
             var found = false;
             try {
@@ -340,10 +369,9 @@ appControllers.controller('LogCntrl', ['$scope', '$rootScope', 'logService', 'hu
                     if (this.Id == log.Id) found = true;
                 });
                 if (!found) {
+                    log.Created = new Date(log.UnixTicks);
                     $scope.logs.push(log);
                 }
-
-                if (trim) { $scope.$apply(function () { $scope.trimPipe(); }); }
             }
             catch (ex) {
                 console.error(ex.message);
@@ -351,7 +379,7 @@ appControllers.controller('LogCntrl', ['$scope', '$rootScope', 'logService', 'hu
         };
 
         $scope.trimPipe = function () {
-            try {                
+            try {
                 if ($scope.logs.length > pipeSize) {
                     $scope.logs.splice(0, $scope.logs.length - pipeSize);
                 }
@@ -362,5 +390,26 @@ appControllers.controller('LogCntrl', ['$scope', '$rootScope', 'logService', 'hu
             }
 
         };
+
+        // Refresh the log timeago
+        $interval(function () {
+            //console.log("interval");  
+            //$log.debug("debug message");
+        }, 3000, false);
+        
+        (function initEvents()
+        {
+            $('.accordion-container').on("click", ".acc-header", function (e) {
+                var show = !$(this).next().hasClass("expanded");
+                $('.accordion-container .acc-body').slideUp().removeClass("expanded");
+                $('.accordion-container .acc-header').removeClass("expanded");
+                if (show) {
+                    $(this).addClass("expanded");
+                    $(this).next().slideDown().addClass("expanded");
+                }
+            });
+        })();
+
     }]);
+
 

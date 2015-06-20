@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="Default.aspx.cs" Inherits="AngularSignalRMapsCharts.Default" %>
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="Default.aspx.cs" Inherits="LiveLog.Default" %>
 
 <!DOCTYPE html>
 
@@ -16,7 +16,8 @@
     <link rel="stylesheet" href="~/web/css/bootstrap-theme.css">
     <link rel="stylesheet" href="~/web/css/bootstrap.css">
     <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
-  
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
     <%--<link rel="stylesheet" href="~/web/css/animations.css">--%>
 
     <script src="web/js/lib/jquery/jquery-1.10.2.min.js"" ></script>

@@ -1,8 +1,8 @@
 ﻿using Microsoft.Owin;
 using Owin;
 
-[assembly: OwinStartup(typeof(AngularSignalRMapsCharts.ServiceHub.Startup))]
-namespace AngularSignalRMapsCharts.ServiceHub
+[assembly: OwinStartup(typeof(LiveLog.ServiceHub.Startup))]
+namespace LiveLog.ServiceHub
 {
     public class Startup
     {

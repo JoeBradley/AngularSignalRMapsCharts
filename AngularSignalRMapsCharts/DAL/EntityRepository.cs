@@ -1,4 +1,4 @@
-﻿using AngularSignalRMapsCharts.Models;
+﻿using LiveLog.Models;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Web;
 
-namespace AngularSignalRMapsCharts.DAL
+namespace LiveLog.DAL
 {
     public class EntityRepository<TEntity> where TEntity : class
     {

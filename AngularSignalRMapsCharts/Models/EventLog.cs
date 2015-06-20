@@ -6,19 +6,35 @@ using System.Web;
 using Newtonsoft;
 using System.ComponentModel.DataAnnotations.Schema;
 using Newtonsoft.Json;
+using log4net.Core;
+using DotNetNuke;
 
-namespace AngularSignalRMapsCharts.Models
+namespace LiveLog.Models
 {
-    public enum EventLogType{
+    public enum EventLogSource{
         Db,
-        Log4net
+        Log4net,
+        JS
+    }
+    public enum EventLogType
+    {
+        Log,
+        Info,
+        Debug,
+        Warn,
+        Error,
+        Critical,
+        Fatal
     }
 
+    /// <summary>
+    /// TODO: replace with DNN EventLog object
+    /// </summary>
     [DataContract]
     public class EventLog
     {
         [DataMember]
-        public virtual int Id { get; protected set; }
+        public virtual Guid Id { get; protected set; }
         [DataMember]
         public virtual string Title { get; set; }
         [DataMember]
@@ -46,17 +62,59 @@ namespace AngularSignalRMapsCharts.Models
         }
         [NotMapped]
         [JsonPropertyAttribute(DefaultValueHandling = DefaultValueHandling.Include)]
-        public EventLogType Type = EventLogType.Db;
+        public EventLogSource Source = EventLogSource.Db;
+        
+        [NotMapped]
+        [JsonPropertyAttribute(DefaultValueHandling = DefaultValueHandling.Include)]
+        public EventLogType Type = EventLogType.Log;
         
         public EventLog() { }
+
+        #region Different Logging Source Object Constructors
+
+        // General Exception into constructor
         public EventLog(Exception ex) {
-            var ts = DateTime.UtcNow.Subtract(new DateTime(2015, 1, 1)).TotalSeconds;
-            Id = Convert.ToInt32(ts); 
+            Id = Guid.NewGuid();
             Title = ex.Message;
             if (ex.InnerException != null) Details = ex.InnerException.Message;
             DateCreated = DateTime.UtcNow;
-            Type = EventLogType.Log4net;
+            Source = EventLogSource.Log4net;
+            Type = EventLogType.Error;
         }
+
+        // log4net Logging Event object into constructor
+        public EventLog(LoggingEvent e)
+        {
+            Id = Guid.NewGuid();
+            Title = e.MessageObject is Exception ? ((Exception)e.MessageObject).Message : e.MessageObject.ToString();
+            Details = e.RenderedMessage;
+            DateCreated = e.TimeStamp;
+            Source = EventLogSource.Log4net;
+            
+            Type =
+                e.Level == Level.Info ? EventLogType.Info :
+                e.Level == Level.Debug ? EventLogType.Debug :
+                e.Level == Level.Warn ? EventLogType.Warn :
+                e.Level == Level.Error ? EventLogType.Error :
+                e.Level == Level.Fatal ? EventLogType.Fatal :
+                EventLogType.Log;            
+        }
+
+        // DNN EventLog object
+        // TODO: Needs work!
+        public EventLog(DotNetNuke.Services.Log.EventLog.LogInfo e)
+        {
+            Id = Guid.NewGuid();
+            Title = e.LogPortalName;
+            Details = e.LogProperties.ToString();
+            DateCreated = e.LogCreateDate;
+            Source = EventLogSource.Db;
+            Type = EventLogType.Error;
+        }
+
+        #endregion
+
+        #region Private Methods
 
         private String GetTimeago(DateTime dt)
         {
@@ -100,5 +158,6 @@ namespace AngularSignalRMapsCharts.Models
             TimeSpan ts = new TimeSpan(d2.Ticks - d1.Ticks);
             return ts.TotalMilliseconds;
         }
+        #endregion
     }
 }

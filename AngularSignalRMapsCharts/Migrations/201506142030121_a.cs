@@ -1,4 +1,4 @@
-namespace AngularSignalRMapsCharts.Migrations
+namespace LiveLog.Migrations
 {
     using System;
     using System.Data.Entity.Migrations;

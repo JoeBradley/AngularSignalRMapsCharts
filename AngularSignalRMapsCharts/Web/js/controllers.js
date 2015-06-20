@@ -10,18 +10,67 @@ appControllers.config(['$provide', function ($provide) {
     $provide.decorator('$log', ['$delegate',  '$injector', 
         function ($delegate, $injector) {
             // Keep track of the original debug method, we'll need it later.
-            var origDebug = $delegate.debug;
+            var _log = $delegate.log;
+            var _info = $delegate.info;
+            var _debug = $delegate.debug;
+            var _warn = $delegate.warn;
+            var _error = $delegate.error;
             
+            var _type = { log: 'log', info: 'info', debug: 'debug', warn: 'warn', error: 'error' };
+
+            var logToServer = function (args,type) {
+                
+                var title = args[0];
+                var msg = '';
+                if (args.length > 1) msg = args[1];
+
+                // call hubService, send logs to server.
+                $injector.get('logService').log(title, msg, type);
+            };
+
+            $delegate.log = function () {
+                var args = [].slice.call(arguments);
+                // Send on our enhanced message to the original debug method.
+                _log.apply(null, args);
+
+                // call hubService, send logs to server.
+                logToServer(args, _type.log);
+            };
+
+            $delegate.info = function () {
+                var args = [].slice.call(arguments);
+                // Send on our enhanced message to the original debug method.
+                _info.apply(null, args);
+
+                // call hubService, send logs to server.
+                logToServer(args, _type.info);
+            };
+
             $delegate.debug = function () {
                 var args = [].slice.call(arguments);
-                args[0] = [new Date().toString(), ': ', args[0]].join('');
-
                 // Send on our enhanced message to the original debug method.
-                origDebug.apply(null, args)
-                    
+                _debug.apply(null, args);
+
                 // call hubService, send logs to server.
-                var hubService = $injector.get('hubService');
-                //hubService.raiseException();
+                logToServer(args, _type.debug);
+            };
+
+            $delegate.warn = function () {
+                var args = [].slice.call(arguments);
+                // Send on our enhanced message to the original debug method.
+                _warn.apply(null, args);
+
+                // call hubService, send logs to server.
+                logToServer(args, _type.warn);
+            };
+
+            $delegate.error = function () {
+                var args = [].slice.call(arguments);
+                // Send on our enhanced message to the original debug method.
+                _error.apply(null, args);
+
+                // call hubService, send logs to server.
+                logToServer(args, _type.error);
             };
 
             return $delegate;
@@ -29,8 +78,96 @@ appControllers.config(['$provide', function ($provide) {
     }]);
 
 
-appControllers.controller('JobListCtrl', ['$scope', '$timeout', 'jobService', 'logService', 'hubService',
-    function ($scope, $timeout, jobService, logService, hubService) {
+appControllers.controller('LogCntrl', ['$scope', '$rootScope', '$interval', '$log',
+    function ($scope, $rootScope, $interval, $log) {
+
+        var that = this;
+        var pipeSize = 100;
+        $scope.logs = [];
+
+        // Hub bound events
+        $rootScope.$on('addLogs', function (e, logs) {
+            console.log("LogCntrl.addLogs");
+            $scope.$apply(function () {
+                $scope.addLogs(logs);
+                $scope.trimPipe();
+                $scope.updateTimeago();
+            });
+        });
+
+        $rootScope.$on('addLog', function (e, log) {
+            console.log("LogCntrl.addLog : " + JSON.stringify(log, null, '\t'));
+
+            $scope.$apply(function () {
+                $scope.addLog(log);
+                $scope.trimPipe();
+            });
+        });
+
+        $scope.addLogs = function (logs) {
+            //console.log("LogCntrl.addLogs: " + JSON.stringify(logs,null, '\t'));
+            try {
+                $.each(logs, function (index) {
+                    $scope.addLog(this, false);
+                });
+            }
+            catch (ex) {
+                console.error(ex.message);
+            }
+        };
+
+        $scope.addLog = function (log) {
+            //console.log("log: " + JSON.stringify(log, null, '\t'));
+            var found = false;
+            try {
+                $.each($scope.logs, function (index) {
+                    if (this.Id == log.Id) found = true;
+                });
+                if (!found) {
+                    log.Created = new Date(log.UnixTicks);
+                    $scope.logs.push(log);
+                }
+            }
+            catch (ex) {
+                console.error(ex.message);
+            }
+        };
+
+        $scope.trimPipe = function () {
+            try {
+                if ($scope.logs.length > pipeSize) {
+                    $scope.logs.splice(0, $scope.logs.length - pipeSize);
+                }
+                //console.log("LogCntrl.trimPipe: " + JSON.stringify($scope.logs, null, '\t'));                    
+            }
+            catch (ex) {
+                console.error(ex.message);
+            }
+
+        };
+
+        // Refresh the log timeago
+        $interval(function () {
+            //console.log("interval");  
+            //$log.debug("debug message");
+        }, 3000, false);
+
+        (function initEvents() {
+            $('.accordion-container').on("click", ".acc-header", function (e) {
+                var show = !$(this).next().hasClass("expanded");
+                $('.accordion-container .acc-body').slideUp().removeClass("expanded");
+                $('.accordion-container .acc-header').removeClass("expanded");
+                if (show) {
+                    $(this).addClass("expanded");
+                    $(this).next().slideDown().addClass("expanded");
+                }
+            });
+        })();
+
+    }]);
+
+appControllers.controller('JobListCtrl', ['$scope', '$timeout', '$log', 'logService', 'hubService', 
+    function ($scope, $timeout, $log, logService, hubService) {
 
         var that = this;
 
@@ -240,64 +377,6 @@ appControllers.controller('JobListCtrl', ['$scope', '$timeout', 'jobService', 'l
             catch (ex) { console.error(ex.message); }
         };
 
-        // Get jobs from web service, load list, setup chart 
-        $scope.jobs = jobService.list(function (jobs) {
-            $scope.jobsCount = jobs.length;
-            initializeChart();
-        });
-
-        // Hub / Client called methods. (SignalR)
-        $scope.addJob = function (job) {
-            try {
-                if ($.inArray(job, $scope.jobs) == -1) {
-                    $scope.$apply(function () {
-                        $scope.jobs.push(job);
-                        $scope.jobsCount++;
-                        that.loadJob(job);
-                    });
-                }
-            }
-            catch (ex) {
-                console.error(ex.message);
-            }
-        };
-
-        // When a "job" is selected: either from the list, map or chart; select this item in the other views
-        $scope.selectJob = function (job, index, ignoreCaller) {
-            if (job == null && index != null) {
-                job = $scope.jobs[index];
-            }
-            else if (job != null && index == null) {
-                index = $scope.jobs.indexOf(job);
-            }
-            else if (job == null && index == null) {
-                console.log('Error: SelectJob');
-            }
-
-            console.log('select job: ' + index + ', ' + ignoreCaller + ', ' + job.Name);
-
-            //clear selection
-            $('#List .selected').removeClass('selected');
-
-            //set selection, Scroll to the center
-            var $p = $('#List');
-            var $c = $('#List > div:eq(' + index + ')').addClass('selected');
-            $p.scrollTop($p.scrollTop() + $c.position().top - $p.height() / 2 + $c.height() / 2);
-
-            if (ignoreCaller != 'chart') {
-                $scope.ignoreChartClick = true;
-                $('.chartclient-annotation-sel').removeClass('chartclient-annotation-sel');
-                $('.chartclient-annotation:eq(' + index + ')').addClass('chartclient-annotation-sel');
-                $scope.ignoreChartClick = false;
-            }
-
-            var d = new Date(parseInt(job.DateCompletedTicks));
-            var y = new Date(parseInt(d.setDate(d.getDate() - 1)));
-            var t = new Date(parseInt(d.setDate(d.getDate() + 2)));
-            that.setChartRange(y, t);
-
-        }
-
         // Init hub eservice and bind event listeners
         hubService.initialize();
 
@@ -308,7 +387,13 @@ appControllers.controller('JobListCtrl', ['$scope', '$timeout', 'jobService', 'l
 
         $scope.raiseException = function () {
             console.log('Raise server exception');
-            hubService.raiseException();
+            //hubService.raiseException();
+            $log.log('<log test>', '<test msg>');
+            $log.info('<info test>', '<test msg>');
+            $log.debug('<debug test>', '<test msg>');
+            $log.warn('<warn test>', '<test msg>');
+            $log.error('<error test>', '<test msg>');
+
         };
 
         // Hub bound events
@@ -322,94 +407,3 @@ appControllers.controller('JobListCtrl', ['$scope', '$timeout', 'jobService', 'l
         });
 
     }]);
-
-appControllers.controller('LogCntrl', ['$scope', '$rootScope', '$interval', '$log',
-    function ($scope, $rootScope, $interval, $log) {
-
-        var that = this;
-        var pipeSize = 5;
-        $scope.logs = [];
-
-        // Hub bound events
-        $rootScope.$on('addLogs', function (e, logs) {
-            console.log("LogCntrl.addLogs");
-            $scope.$apply(function () {
-                $scope.addLogs(logs);
-                $scope.trimPipe();
-                $scope.updateTimeago();
-            });
-        });
-
-        $rootScope.$on('addLog', function (e, log) {
-            console.log("LogCntrl.addLog");
-            
-            $scope.$apply(function () {
-                $scope.addLog(log);
-                $scope.trimPipe();
-            });
-        });
-
-        $scope.addLogs = function (logs) {
-            //console.log("LogCntrl.addLogs: " + JSON.stringify(logs,null, '\t'));
-            try {
-                $.each(logs, function (index) {
-                    $scope.addLog(this, false);
-                });
-            }
-            catch (ex) {
-                console.error(ex.message);
-            }
-        };
-
-        $scope.addLog = function (log) {
-            //console.log("log: " + JSON.stringify(log, null, '\t'));
-            var found = false;
-            try {
-                $.each($scope.logs, function (index) {
-                    if (this.Id == log.Id) found = true;
-                });
-                if (!found) {
-                    log.Created = new Date(log.UnixTicks);
-                    $scope.logs.push(log);
-                }
-            }
-            catch (ex) {
-                console.error(ex.message);
-            }
-        };
-
-        $scope.trimPipe = function () {
-            try {
-                if ($scope.logs.length > pipeSize) {
-                    $scope.logs.splice(0, $scope.logs.length - pipeSize);
-                }
-                //console.log("LogCntrl.trimPipe: " + JSON.stringify($scope.logs, null, '\t'));                    
-            }
-            catch (ex) {
-                console.error(ex.message);
-            }
-
-        };
-
-        // Refresh the log timeago
-        $interval(function () {
-            //console.log("interval");  
-            //$log.debug("debug message");
-        }, 3000, false);
-        
-        (function initEvents()
-        {
-            $('.accordion-container').on("click", ".acc-header", function (e) {
-                var show = !$(this).next().hasClass("expanded");
-                $('.accordion-container .acc-body').slideUp().removeClass("expanded");
-                $('.accordion-container .acc-header').removeClass("expanded");
-                if (show) {
-                    $(this).addClass("expanded");
-                    $(this).next().slideDown().addClass("expanded");
-                }
-            });
-        })();
-
-    }]);
-
-

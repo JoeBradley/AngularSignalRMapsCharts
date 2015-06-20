@@ -7,7 +7,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace AngularSignalRMapsCharts {
+namespace LiveLog {
     
     
     public partial class Default {

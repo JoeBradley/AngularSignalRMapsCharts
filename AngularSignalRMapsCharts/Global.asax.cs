@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using System.Web.Http;
 using System.Web.Routing;
 using System.Web.Security;
 using System.Web.SessionState;
+using LiveLog.LogSources;
 
-namespace AngularSignalRMapsCharts
+namespace LiveLog
 {
     public class Global : System.Web.HttpApplication
     {
@@ -15,8 +17,11 @@ namespace AngularSignalRMapsCharts
         {
             log4net.Config.XmlConfigurator.Configure();
 
-            RouteConfig.RegisterRoutes(RouteTable.Routes);
-            LogDependency.RegisterDependency();
+            GlobalConfiguration.Configure(RouteConfig.RegisterWebAPI);
+
+            // TODO: Add this to owin startup, get the DNN PortalID from the app somehow.
+            int portalId = 0;
+            DnnEventLogDependency.Init(portalId);
         }
 
         protected void Session_Start(object sender, EventArgs e)
@@ -45,7 +50,7 @@ namespace AngularSignalRMapsCharts
 
         protected void Application_End(object sender, EventArgs e)
         {
-            LogDependency.Stop();
+            DnnEventLogDependency.Stop();
 
         }
     }

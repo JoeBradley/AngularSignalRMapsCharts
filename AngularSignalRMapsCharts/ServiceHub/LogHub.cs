@@ -10,32 +10,45 @@ using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Hubs;
 using System.Threading;
 
-using AngularSignalRMapsCharts.DAL;
-using AngularSignalRMapsCharts.Models;
+using LiveLog.DAL;
+using LiveLog.Models;
 using log4net;
 
-namespace AngularSignalRMapsCharts.ServiceHub
+namespace LiveLog.ServiceHub
 {
+    // LogHub for SignalR Clients.
     public class LogHub : Hub
     {
         private static readonly ILog logger = LogManager.GetLogger(typeof(LogHub).Name);
 
-        private readonly Log _log;
+        private readonly LogHubController _log;
 
-        public LogHub() : this(Log.Instance) { }
+        public LogHub() : this(LogHubController.Instance) { }
 
-        public LogHub(Log log)
+        public LogHub(LogHubController log)
         {
             _log = log;            
         }
 
-        public IEnumerable<EventLog> GetLogs()
+        //public IEnumerable<EventLog> GetLogs()
+        //{
+        //    return _log.GetList();
+        //}
+        //public IEnumerable<EventLog> GetLogs(DateTime date)
+        //{
+        //    return _log.GetList(date);
+        //}
+
+        // Add a Client Generated JS Log
+        public void SetLog(EventLog log)
         {
-            return _log.GetList();
-        }
-        public IEnumerable<EventLog> GetLogs(DateTime date)
-        {
-            return _log.GetList(date);
+            //try {
+            //    switch (log.Source)
+            //    { 
+            //        log
+            //    }
+            //}
+            //catch(Exception ex){}
         }
 
         public void RaiseException()
@@ -50,21 +63,22 @@ namespace AngularSignalRMapsCharts.ServiceHub
         }
     }
 
-    public class Log : IDisposable
+    // Controller for all the LogHubs.  Can use this to broadcast to anz connected LogHUb clients.
+    public class LogHubController
     {
         // Singleton instance
-        private readonly static Lazy<Log> _instance = new Lazy<Log>(() => new Log(GlobalHost.ConnectionManager.GetHubContext<LogHub>().Clients));
+        private readonly static Lazy<LogHubController> _instance = new Lazy<LogHubController>(() => new LogHubController(GlobalHost.ConnectionManager.GetHubContext<LogHub>().Clients));
         
+        // TODO: add cached logs.  probably max 1000?
+
         private static DateTime sinceDate = DateTime.MinValue;
 
-        UnitOfWork _db = new UnitOfWork(); 
-        
-        private Log(IHubConnectionContext<dynamic> clients)
+        private LogHubController(IHubConnectionContext<dynamic> clients)
         {
             Clients = clients;
         }
 
-        public static Log Instance
+        public static LogHubController Instance
         {
             get
             {
@@ -78,34 +92,26 @@ namespace AngularSignalRMapsCharts.ServiceHub
             set;
         }
 
-        public IEnumerable<EventLog> GetList()
-        {
-            return _db.EventsRepository.Get();
-        }
-        public IEnumerable<EventLog> GetList(DateTime date)
-        {
-            return _db.EventsRepository.Get(x => x.DateCreated >= date);
-        }
-
-        // Test with query: INSERT INTO EventLog (Title, Details, DateCreated) VALUES ('test', 'test', '2016-01-01 00:00:00.000');
-        public void BroadcastLogs()
-        {
-            var logs = GetList(sinceDate);
-            
-            Clients.All.addLogs(logs);
-            
-            sinceDate = DateTime.UtcNow;
-        }
+        // TODO: Get items from local cache
+        //public IEnumerable<EventLog> GetList()
+        //{
+        //    return _db.EventsRepository.Get();
+        //}
+        //public IEnumerable<EventLog> GetList(DateTime date)
+        //{
+        //    return _db.EventsRepository.Get(x => x.DateCreated >= date);
+        //}
 
         public void BroadcastLog(EventLog log)
         {
             Clients.All.addLog(log);
         }
 
-
-        public void Dispose()
+        // Broadcast Event Logs
+        public void BroadcastLogs(List<EventLog> logs)
         {
-            _db.Dispose();
+            Clients.All.addLogs(logs);
         }
+
     }
 }

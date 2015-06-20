@@ -1,28 +1,17 @@
-﻿using AngularSignalRMapsCharts.Models;
+﻿using LiveLog.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 
-namespace AngularSignalRMapsCharts.DAL
+namespace LiveLog.DAL
 {
     public class UnitOfWork : IDisposable
     {
         private DataContext context = new DataContext();
-        private EntityRepository<Company> companyRepository;
+        
         private EntityRepository<EventLog> eventsRepository;
 
-        public EntityRepository<Company> CompanyRepository
-        {
-            get
-            {
-                if (this.companyRepository == null)
-                {
-                    this.companyRepository = new EntityRepository<Company>(context);
-                }
-                return companyRepository;
-            }
-        }
         public EntityRepository<EventLog> EventsRepository
         {
             get

@@ -31,7 +31,17 @@ namespace LiveLog.LogSources
                 var data = e.MessageObject as Dictionary<string, string>;
                 log.Title = data["Title"];
                 log.Details = data["Message"];
-                log.Source = EventLogSource.JS;                
+                log.Source = EventLogSource.JS;
+                switch (data["Type"])
+                {
+                    case "log": log.Type = EventLogType.Log; break;
+                    case "info": log.Type = EventLogType.Info; break;
+                    case "debug": log.Type = EventLogType.Debug; break;
+                    case "warn": log.Type = EventLogType.Warn; break;
+                    case "error": log.Type = EventLogType.Error; break;
+                    case "fatal": log.Type = EventLogType.Fatal; break;
+                    default: log.Type = EventLogType.Log; break;
+                }
             }
             LogHubController.Instance.BroadcastLog(log);
         }

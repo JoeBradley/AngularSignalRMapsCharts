@@ -65,10 +65,10 @@ appServices.factory('hubService', ['$rootScope',
 
             $.connection.hub.disconnected(function () {
                 console.log('connection.hub.disconnected');
-                window.setTimeout(function () {
-                    self.waitTimeout++;
-                    initialize();
-                }, waitTimeout * 1000);
+                //window.setTimeout(function () {
+                //    self.waitTimeout++;
+                //    initialize();
+                //}, waitTimeout * 1000);
             });
 
             // Log SignalR

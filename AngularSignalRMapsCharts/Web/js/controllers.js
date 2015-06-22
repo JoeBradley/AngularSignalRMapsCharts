@@ -5,6 +5,21 @@
 
 var appControllers = angular.module('appControllers', []);
 
+var eventLogType = {
+    log: {name:'log', value: 0 }, 
+    info:{name:'info', value: 1 }, 
+    debug: {name:'debug', value: 2 }, 
+    warn: {name:'warn', value: 3 },
+    error: {name:'error', value: 4 }, 
+    fatal: {name:'fatal', value: 5 }, 
+};
+var eventSourceType = {
+    js: { name: 'JavaScript', value: 0 },
+    int: { name: 'Internal', value: 1 },
+    db: { name: 'Database', value: 2 },
+    ext: { name: 'External', value: 3 },
+};
+
 // todo: look into decorators to finish this, add method to hubService to send logs back to server.
 appControllers.config(['$provide', function ($provide) {
     $provide.decorator('$log', ['$delegate',  '$injector', 
@@ -15,9 +30,10 @@ appControllers.config(['$provide', function ($provide) {
             var _debug = $delegate.debug;
             var _warn = $delegate.warn;
             var _error = $delegate.error;
-            
-            var _type = { log: 'log', info: 'info', debug: 'debug', warn: 'warn', error: 'error' };
+            var _fatal = $delegate.fatal;
 
+            var _type = eventLogType;
+            
             var logToServer = function (args,type) {
                 
                 var title = args[0];
@@ -25,7 +41,7 @@ appControllers.config(['$provide', function ($provide) {
                 if (args.length > 1) msg = args[1];
 
                 // call hubService, send logs to server.
-                $injector.get('logService').log(title, msg, type);
+                $injector.get('logService').log(title, msg, type.name);
             };
 
             $delegate.log = function () {
@@ -73,6 +89,17 @@ appControllers.config(['$provide', function ($provide) {
                 logToServer(args, _type.error);
             };
 
+            $delegate.fatal = function () {
+                console.log("fatal: " + JSON.stringify(arguments));
+
+                var args = [].slice.call(arguments);
+                // Send on our enhanced message to the original debug method.
+                //_fatal.apply(null, args);
+
+                // call hubService, send logs to server.
+                logToServer(args, _type.fatal);
+            };
+
             return $delegate;
         }]);
     }]);
@@ -84,6 +111,28 @@ appControllers.controller('LogCntrl', ['$scope', '$rootScope', '$interval', '$lo
         var that = this;
         var pipeSize = 100;
         $scope.logs = [];
+        $scope.stats = {
+            log: 0,
+            info: 0,
+            debug: 0,
+            warn: 0,
+            error: 0,
+            fatal: 0
+        };
+        $scope.srcFilter = {
+            js: true,
+            int: true,
+            db: true,
+            ext: true
+        };
+        $scope.typeFilter = {
+            log: true,
+            info: true,
+            debug: true,
+            warn: true,
+            error: true,
+            fatal: true,
+        };
 
         // Hub bound events
         $rootScope.$on('addLogs', function (e, logs) {
@@ -91,7 +140,7 @@ appControllers.controller('LogCntrl', ['$scope', '$rootScope', '$interval', '$lo
             $scope.$apply(function () {
                 $scope.addLogs(logs);
                 $scope.trimPipe();
-                $scope.updateTimeago();
+                $scope.updateStats();
             });
         });
 
@@ -101,6 +150,7 @@ appControllers.controller('LogCntrl', ['$scope', '$rootScope', '$interval', '$lo
             $scope.$apply(function () {
                 $scope.addLog(log);
                 $scope.trimPipe();
+                $scope.updateStats();
             });
         });
 
@@ -118,12 +168,25 @@ appControllers.controller('LogCntrl', ['$scope', '$rootScope', '$interval', '$lo
 
         $scope.addLog = function (log) {
             //console.log("log: " + JSON.stringify(log, null, '\t'));
-            var found = false;
+            var duplicate = false;
             try {
                 $.each($scope.logs, function (index) {
-                    if (this.Id == log.Id) found = true;
+                    if ((this.Id == log.Id) ||
+                        (!$scope.srcFilter.js && log.Source == eventSourceType.js.value) ||
+                        (!$scope.srcFilter.int && log.Source == eventSourceType.int.value) ||
+                        (!$scope.srcFilter.db && log.Source == eventSourceType.db.value) ||
+                        (!$scope.srcFilter.ext && log.Source == eventSourceType.ext.value) ||
+                        (!$scope.typeFilter.log && log.Type == eventLogType.log.value) ||
+                        (!$scope.typeFilter.info && log.Type == eventLogType.info.value) ||
+                        (!$scope.typeFilter.debug && log.Type == eventLogType.debug.value) ||
+                        (!$scope.typeFilter.warn && log.Type == eventLogType.warn.value) ||
+                        (!$scope.typeFilter.error && log.Type == eventLogType.error.value) ||
+                        (!$scope.typeFilter.fatal && log.Type == eventLogType.fatal.value))
+                    {
+                        duplicate = true;
+                    }                    
                 });
-                if (!found) {
+                if (!duplicate) {
                     log.Created = new Date(log.UnixTicks);
                     $scope.logs.push(log);
                 }
@@ -144,6 +207,15 @@ appControllers.controller('LogCntrl', ['$scope', '$rootScope', '$interval', '$lo
                 console.error(ex.message);
             }
 
+        };
+
+        $scope.updateStats = function () {
+            $scope.stats.log = $.Enumerable.From($scope.logs).Count(function (x) { return x.Type == eventLogType.log.value; });
+            $scope.stats.info = $.Enumerable.From($scope.logs).Count(function (x) { return x.Type == eventLogType.info.value;; });
+            $scope.stats.debug = $.Enumerable.From($scope.logs).Count(function (x) { return x.Type == eventLogType.debug.value;; });
+            $scope.stats.warn = $.Enumerable.From($scope.logs).Count(function (x) { return x.Type == eventLogType.warn.value;; });
+            $scope.stats.error = $.Enumerable.From($scope.logs).Count(function (x) { return x.Type == eventLogType.error.value;; });
+            $scope.stats.fatal = $.Enumerable.From($scope.logs).Count(function (x) { return x.Type == eventLogType.fatal.value;; });
         };
 
         // Refresh the log timeago
@@ -393,6 +465,7 @@ appControllers.controller('JobListCtrl', ['$scope', '$timeout', '$log', 'logServ
             $log.debug('<debug test>', '<test msg>');
             $log.warn('<warn test>', '<test msg>');
             $log.error('<error test>', '<test msg>');
+            $log.fatal('<fatal test>', '<test msg>');
 
         };
 

@@ -12,9 +12,10 @@ using DotNetNuke;
 namespace LiveLog.Models
 {
     public enum EventLogSource{
+        JS,
+        Internal,
         Db,
-        Log4net,
-        JS
+        External
     }
     public enum EventLogType
     {
@@ -23,7 +24,6 @@ namespace LiveLog.Models
         Debug,
         Warn,
         Error,
-        Critical,
         Fatal
     }
 
@@ -78,7 +78,7 @@ namespace LiveLog.Models
             Title = ex.Message;
             if (ex.InnerException != null) Details = ex.InnerException.Message;
             DateCreated = DateTime.UtcNow;
-            Source = EventLogSource.Log4net;
+            Source = EventLogSource.Internal;
             Type = EventLogType.Error;
         }
 
@@ -89,7 +89,7 @@ namespace LiveLog.Models
             Title = e.MessageObject is Exception ? ((Exception)e.MessageObject).Message : e.MessageObject.ToString();
             Details = e.RenderedMessage;
             DateCreated = e.TimeStamp;
-            Source = EventLogSource.Log4net;
+            Source = EventLogSource.Internal;
             
             Type =
                 e.Level == Level.Info ? EventLogType.Info :

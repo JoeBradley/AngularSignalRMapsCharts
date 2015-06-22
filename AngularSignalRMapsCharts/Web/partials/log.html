@@ -1,5 +1,14 @@
 ﻿<div ng-controller="LogCntrl">
     <div class="row">
+        <span class="label"><i class="fa fa-file-text-o"></i>&nbsp;{{stats.log}}</span>
+        <span class="label label-info"><i class="fa fa-info-circle"></i>&nbsp;{{stats.info}}</span>
+        <span class="label label-success"><i class="fa fa-bug"></i>&nbsp;{{stats.debug}}</span>
+        <span class="label label-warning"><i class="fa fa-exclamation-triangle"></i>&nbsp;{{stats.warn}}</span>
+        <span class="label label-danger"><i class="fa fa-bolt"></i>&nbsp;{{stats.error}}</span>
+        <span class="label label-default"><i class="fa fa-bomb"></i>&nbsp;{{stats.fatal}}</span>
+    </div>
+
+    <div class="row">
         <div class="col-md-12 accordion-container">
             <h3 class="acc-header" ng-repeat-start="log in logs | orderBy:'DateCreated':true track by log.Id" data-id="{{log.Id}}">{{log.Title}}</h3>
             <div ng-repeat-end class="acc-body">

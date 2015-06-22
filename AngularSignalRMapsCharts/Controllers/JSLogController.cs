@@ -19,11 +19,11 @@ namespace LiveLog.Controllers
         {
             try
             {
-                var obj = new Dictionary<string,string>(){{"Title", title},{"Message", message}};
+                var obj = new Dictionary<string, string>() { { "Title", title }, { "Message", message }, { "Type", type } };
                 
                 switch (type.ToLower())
                 {
-                    case "log":
+                    case "log": log.Info(obj); break;
                     case "info": log.Info(obj); break;
                     case "debug": log.Debug(obj); break;
                     case "warn": log.Warn(obj); break;
